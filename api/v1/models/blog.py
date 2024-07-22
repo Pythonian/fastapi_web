@@ -11,13 +11,42 @@ class Blog(Base):
 
     __tablename__ = "blogs"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    title = Column(String(255), nullable=False, unique=True)
-    excerpt = Column(String(300), nullable=False)
-    content = Column(Text, nullable=False)
-    image_url = Column(String(255), nullable=False)
-    is_deleted = Column(Boolean, default=False, nullable=False)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True,
+        autoincrement=True,
+    )
+    title = Column(
+        String(255),
+        nullable=False,
+        unique=True,
+    )
+    excerpt = Column(
+        String(300),
+        nullable=False,
+    )
+    content = Column(
+        Text,
+        nullable=False,
+    )
+    image_url = Column(
+        String(255),
+        nullable=False,
+    )
+    is_deleted = Column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
     updated_at = Column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
     )

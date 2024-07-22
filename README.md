@@ -47,6 +47,14 @@ A Makefile has been provided for easy project setup.
 
    This command will copy an `.env` file into your directory. Open it and update the values before you proceed.
 
+- **Make Migrations**
+
+   Run the alembic migration to create the Tables in your database.
+
+   ```bash
+   make migrate
+   ```
+
 - **Run Checks**
 
    Ensure that everything is set up correctly:
@@ -57,8 +65,6 @@ A Makefile has been provided for easy project setup.
 
 - **Run the Development Server**
 
-   To start the development server, use:
-
    ```bash
    make run
    ```
@@ -67,7 +73,7 @@ A Makefile has been provided for easy project setup.
 
 - **Cleaning Up**
 
-   To clean up the project directory, removing unnecessary files and directories, use:
+   To clean up the project directory:
 
    ```bash
    make clean
