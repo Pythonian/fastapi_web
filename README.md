@@ -8,7 +8,6 @@ Before you begin, the project assumes the following:
 
 - A Linux environment, or WSL (if using Windows)
 - Python 3.10 or later installed.
-- PostgreSQL installed.
 
 A Makefile has been provided for easy project setup.
 
@@ -80,3 +79,4 @@ A Makefile has been provided for easy project setup.
 
 - [HNG Boilerplate](https://github.com/hngprojects/hng_boilerplate_python_fastapi_web)
 - [FastAPI Tutorial](https://www.youtube.com/playlist?list=PLEt8Tae2spYnHy378vMlPH--87cfeh33P)
+- [API Best Practices](https://github.com/saifaustcse/api-best-practices)
