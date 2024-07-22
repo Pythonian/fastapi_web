@@ -15,8 +15,7 @@ class BlogResponseSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class BlogCreateSchema(BaseModel):
@@ -28,6 +27,7 @@ class BlogCreateSchema(BaseModel):
 
     title: str = Field(
         ...,
+        min_length=1,
         max_length=255,
         description="Title of the blog post",
     )

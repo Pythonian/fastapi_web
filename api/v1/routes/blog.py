@@ -8,7 +8,7 @@ import logging
 
 blog = APIRouter(prefix="/blogs", tags=["blog"])
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("api")
 
 
 @blog.post(
@@ -20,6 +20,7 @@ def create_blog(blog: BlogCreateSchema, db: Session = Depends(get_db)):
     try:
         existing_blog = db.query(Blog).filter(Blog.title == blog.title).first()
         if existing_blog:
+            logger.warning(f"Blog post with title '{blog.title}' already exists.")
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="A blog post with this title already exists.",

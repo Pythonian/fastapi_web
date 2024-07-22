@@ -30,6 +30,11 @@ LOGGING_CONFIG = {
             "level": "DEBUG",
             "propagate": True,
         },
+        "api": {
+            "handlers": ["console", "file"],
+            "level": "INFO",
+            "propagate": False,
+        },
     },
 }
 
