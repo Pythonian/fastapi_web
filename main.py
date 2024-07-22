@@ -4,8 +4,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
 from api.db.database import Base, engine
-
-# from api.v1.routes import api_version_one
+from api.utils.logging_config import setup_logging
+from api.v1.routes import api_version_one
 
 Base.metadata.create_all(bind=engine)
 
@@ -14,6 +14,9 @@ Base.metadata.create_all(bind=engine)
 async def lifespan(app: FastAPI):
     yield
 
+
+# Setup logging configuration
+setup_logging()
 
 app = FastAPI(lifespan=lifespan)
 
@@ -30,7 +33,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.include_router(api_version_one)
+app.include_router(api_version_one)
 
 
 @app.get("/", tags=["Home"])

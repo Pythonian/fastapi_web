@@ -17,3 +17,7 @@ clean: ## Clean up the project of unneeded files
 
 run: ## Run the development server
 	@uvicorn main:app --reload
+
+migrate: ## Run the database migration
+	@alembic revision --autogenerate
+	@alembic upgrade head
