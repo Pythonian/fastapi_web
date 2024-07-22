@@ -1,1 +1,3 @@
-# fastapi_blog
+# FastAPI Blog
+
+FastAPI boilerplate setup
