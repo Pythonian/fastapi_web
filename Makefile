@@ -39,8 +39,6 @@ venv: ## Create a virtual environment
 install: ## Install development dependencies
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
-	$(PIP) install pre-commit==3.7.1
-	$(PRE_COMMIT) install
 	cp .env.example .env
 	@echo "Development dependencies has been setup."
 
@@ -48,20 +46,23 @@ migrate: ## Run the database migration
 	$(ALEMBIC) upgrade head
 
 check: ## Run all checks using tox and pre-commit
+	$(PIP) install tox==4.16.0 pre-commit==3.7.1
 	$(TOX)
+	$(PRE_COMMIT) install
 	$(PRE_COMMIT) run --all-files
 	@echo "All checks passed"
 
 run: ## Run the development server
 	$(UVICORN) main:app --reload
 
-clean: ## Clean up the project of unneeded files
-	@echo "Cleaning up the project of unneeded files..."
+clean: ## Clean up the project
+	@echo "Cleaning up the project of temporary files and directories..."
 	@rm -rf $(VENV_DIR)
 	@rm -rf .cache
 	@rm -rf build
 	@rm -rf htmlcov coverage.xml .coverage
 	@rm -rf .tox
+	@rm -rf *.log
 	@rm -rf .mypy_cache
 	@rm -rf .ruff_cache
 	@rm -rf *.egg-info

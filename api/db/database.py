@@ -15,22 +15,21 @@ DB_TYPE = settings.DB_TYPE
 
 
 def get_db_engine(test_mode: bool = False):  # type: ignore
-    DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-
     if DB_TYPE == "sqlite" or test_mode:
         BASE_PATH = f"sqlite:///{BASE_DIR}"
-        DATABASE_URL = BASE_PATH + "/"
+        DATABASE_URL = BASE_PATH + ("/test.db" if test_mode else "/db.sqlite3")
 
-        if test_mode:
-            DATABASE_URL = BASE_PATH + "test.db"
-
-            return create_engine(
-                DATABASE_URL, connect_args={"check_same_thread": False}
-            )
+        return create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+    elif DB_TYPE == "mysql":
+        DATABASE_URL = (
+            f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+        )
     elif DB_TYPE == "postgresql":
         DATABASE_URL = (
             f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
         )
+    else:
+        raise ValueError(f"Unsupported DB_TYPE: {DB_TYPE}")
 
     return create_engine(DATABASE_URL)
 
