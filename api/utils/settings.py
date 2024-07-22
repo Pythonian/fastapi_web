@@ -1,6 +1,7 @@
-from pydantic_settings import BaseSettings
-from decouple import config
 from pathlib import Path
+
+from decouple import config
+from pydantic_settings import BaseSettings
 
 # Use this to build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent

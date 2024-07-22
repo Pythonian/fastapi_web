@@ -1,12 +1,18 @@
-from typing import Any
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy import not_
-from api.v1.models.blog import Blog
-from api.v1.schemas.blog import BlogCreateSchema, BlogResponseSchema
-from api.db.database import get_db
 import logging
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import not_
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
+
+from api.db.database import get_db
+from api.v1.models.blog import Blog
+from api.v1.schemas.blog import (
+    BlogCreateResponseSchema,
+    BlogCreateSchema,
+    BlogListItemResponseSchema,
+    BlogListResponseSchema,
+)
 
 blog = APIRouter(prefix="/blogs", tags=["Blog"])
 
@@ -15,10 +21,13 @@ logger = logging.getLogger("api")
 
 @blog.post(
     "",
-    response_model=BlogResponseSchema,
+    response_model=BlogCreateResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_blog(blog: BlogCreateSchema, db: Session = Depends(get_db)):
+async def create_blog(
+    blog: BlogCreateSchema,
+    db: Session = Depends(get_db),
+) -> BlogCreateResponseSchema:
     try:
         existing_blog = db.query(Blog).filter(Blog.title == blog.title).first()
         if existing_blog:
@@ -38,7 +47,8 @@ async def create_blog(blog: BlogCreateSchema, db: Session = Depends(get_db)):
         db.commit()
         db.refresh(new_blog)
         logger.info(f"Blog post '{new_blog.title}' created successfully.")
-        return new_blog
+
+        return BlogCreateResponseSchema.model_validate(new_blog.__dict__)
 
     except HTTPException as http_err:
         logger.warning(f"HTTP error occurred: {http_err.detail}")
@@ -59,12 +69,16 @@ async def create_blog(blog: BlogCreateSchema, db: Session = Depends(get_db)):
         )
 
 
-@blog.get("", status_code=status.HTTP_200_OK)
+@blog.get(
+    "",
+    response_model=BlogListResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
 async def list_blog(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-) -> dict[str, Any]:
+) -> BlogListResponseSchema:
     try:
         offset = (page - 1) * page_size
         query = (
@@ -84,22 +98,22 @@ async def list_blog(
             prev_page = f"/api/v1/blogs?page={page - 1}&page_size={page_size}"
 
         results = [
-            {
-                "id": blog.id,
-                "title": blog.title,
-                "excerpt": blog.excerpt,
-                "image_url": blog.image_url,
-                "created_at": blog.created_at,
-            }
+            BlogListItemResponseSchema(
+                id=blog.id,
+                title=blog.title,
+                excerpt=blog.excerpt,
+                image_url=blog.image_url,
+                created_at=blog.created_at,
+            )
             for blog in blogs
         ]
 
-        return {
-            "count": total_count,
-            "next": next_page,
-            "previous": prev_page,
-            "results": results,
-        }
+        return BlogListResponseSchema(
+            count=total_count,
+            next=next_page,
+            previous=prev_page,
+            results=results,
+        )
 
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred: {e}")

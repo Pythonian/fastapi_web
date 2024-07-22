@@ -1,13 +1,11 @@
-from fastapi.testclient import TestClient
 import pytest
+from decouple import config
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
+from api.db.database import Base, get_db
 from main import app
-from decouple import config
-
-
-from api.db.database import get_db, Base
-
 
 DB_TYPE = config("DB_TYPE")
 DB_NAME = config("DB_NAME")

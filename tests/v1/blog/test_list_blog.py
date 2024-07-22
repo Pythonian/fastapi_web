@@ -1,9 +1,12 @@
+from datetime import datetime
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock
-from main import app
-from api.v1.models.blog import Blog
+
 from api.db.database import get_db
+from api.v1.models.blog import Blog
+from main import app
 
 client = TestClient(app)
 
@@ -27,6 +30,7 @@ def test_successful_retrieval_of_paginated_blog_posts(db_session_mock):
         excerpt="This is an excerpt from my first blog.",
         content="Content of the first blog",
         image_url="https://example.com/image1.jpg",
+        created_at=datetime(2024, 7, 22, 12, 0, 0),
     )
     _ = Blog(
         id=2,
@@ -34,6 +38,7 @@ def test_successful_retrieval_of_paginated_blog_posts(db_session_mock):
         excerpt="This is an excerpt from my second blog.",
         content="Content of the second blog",
         image_url="https://example.com/image2.jpg",
+        created_at=datetime(2024, 7, 22, 12, 30, 0),
     )
 
     db_session_mock.query().filter().order_by().offset().limit().all.return_value = [

@@ -1,6 +1,6 @@
 """The Blog Post Model."""
 
-from sqlalchemy import Column, String, Text, Boolean, Integer, DateTime
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
 from sqlalchemy.sql import func
 
 from api.v1.models.base import Base

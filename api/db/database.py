@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """The database module"""
 
-from sqlalchemy.orm import declarative_base, sessionmaker, scoped_session
 from sqlalchemy import create_engine
-from api.utils.settings import settings, BASE_DIR
+from sqlalchemy.orm import declarative_base, scoped_session, sessionmaker
 
+from api.utils.settings import BASE_DIR, settings
 
 DB_HOST = settings.DB_HOST
 DB_PORT = settings.DB_PORT
@@ -14,7 +14,7 @@ DB_NAME = settings.DB_NAME
 DB_TYPE = settings.DB_TYPE
 
 
-def get_db_engine(test_mode: bool = False):
+def get_db_engine(test_mode: bool = False):  # type: ignore
     DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 
     if DB_TYPE == "sqlite" or test_mode:

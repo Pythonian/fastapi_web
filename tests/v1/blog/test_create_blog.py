@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import MagicMock
-from main import app
+
 from api.db.database import get_db
 from api.v1.models.blog import Blog
+from main import app
 
 client = TestClient(app)
 

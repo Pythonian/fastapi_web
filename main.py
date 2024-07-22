@@ -1,8 +1,10 @@
-import uvicorn
 from contextlib import asynccontextmanager
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.requests import Request
+
 from api.db.database import Base, engine
 from api.utils.logging_config import setup_logging
 from api.v1.routes import api_version_one
