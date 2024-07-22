@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Any
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy import not_
 from api.v1.models.blog import Blog
 from api.v1.schemas.blog import BlogCreateSchema, BlogResponseSchema
 from api.db.database import get_db
 import logging
 
-blog = APIRouter(prefix="/blogs", tags=["blog"])
+blog = APIRouter(prefix="/blogs", tags=["Blog"])
 
 logger = logging.getLogger("api")
 
@@ -16,7 +18,7 @@ logger = logging.getLogger("api")
     response_model=BlogResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
-def create_blog(blog: BlogCreateSchema, db: Session = Depends(get_db)):
+async def create_blog(blog: BlogCreateSchema, db: Session = Depends(get_db)):
     try:
         existing_blog = db.query(Blog).filter(Blog.title == blog.title).first()
         if existing_blog:
@@ -49,6 +51,62 @@ def create_blog(blog: BlogCreateSchema, db: Session = Depends(get_db)):
             detail="Database error occurred.",
         )
 
+    except Exception as e:
+        logger.error(f"Unexpected error occurred: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error.",
+        )
+
+
+@blog.get("", status_code=status.HTTP_200_OK)
+async def list_blog(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+) -> dict[str, Any]:
+    try:
+        offset = (page - 1) * page_size
+        query = (
+            db.query(Blog)
+            .filter(not_(Blog.is_deleted))
+            .order_by(Blog.created_at.desc())
+        )
+        total_count = query.count()
+        blogs = query.offset(offset).limit(page_size).all()
+
+        next_page = None
+        if offset + page_size < total_count:
+            next_page = f"/api/v1/blogs?page={page + 1}&page_size={page_size}"
+
+        prev_page = None
+        if page > 1:
+            prev_page = f"/api/v1/blogs?page={page - 1}&page_size={page_size}"
+
+        results = [
+            {
+                "id": blog.id,
+                "title": blog.title,
+                "excerpt": blog.excerpt,
+                "image_url": blog.image_url,
+                "created_at": blog.created_at,
+            }
+            for blog in blogs
+        ]
+
+        return {
+            "count": total_count,
+            "next": next_page,
+            "previous": prev_page,
+            "results": results,
+        }
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database error occurred: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred.",
+        )
     except Exception as e:
         logger.error(f"Unexpected error occurred: {e}")
         raise HTTPException(
