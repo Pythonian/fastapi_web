@@ -10,7 +10,7 @@ Before you begin, the project assumes the following:
 - Python 3.10 or later installed.
 - PostgreSQL installed.
 
-A Makefile has been provided for easy project setup. You can run the command `make` to see all available commands.
+A Makefile has been provided for easy project setup.
 
 ## Setup Instructions
 
@@ -26,7 +26,7 @@ A Makefile has been provided for easy project setup. You can run the command `ma
    cd fastapi_web
    ```
 
-- **Create and Activate the Virtual Environment**
+- **Create a Virtual Environment**
 
    ```bash
    make venv
@@ -47,12 +47,6 @@ A Makefile has been provided for easy project setup. You can run the command `ma
    ```
 
    This command will copy an `.env` file into your directory. Open it and update the values before you proceed.
-
-- **Run Database Migrations**
-
-   ```bash
-   make migrate
-   ```
 
 - **Run Checks**
 
@@ -79,6 +73,8 @@ A Makefile has been provided for easy project setup. You can run the command `ma
    ```bash
    make clean
    ```
+
+   You can run the command `make` to see all available commands.
 
 ## Credits
 

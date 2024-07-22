@@ -39,6 +39,7 @@ venv: ## Create a virtual environment
 install: ## Install development dependencies
 	$(PIP) install --upgrade pip
 	$(PIP) install -r requirements.txt
+	$(PIP) install pre-commit==3.7.1
 	$(PRE_COMMIT) install
 	cp .env.example .env
 	@echo "Development dependencies has been setup."
@@ -58,6 +59,7 @@ clean: ## Clean up the project of unneeded files
 	@echo "Cleaning up the project of unneeded files..."
 	@rm -rf $(VENV_DIR)
 	@rm -rf .cache
+	@rm -rf build
 	@rm -rf htmlcov coverage.xml .coverage
 	@rm -rf .tox
 	@rm -rf .mypy_cache
