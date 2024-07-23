@@ -8,10 +8,10 @@ from sqlalchemy.orm import Session
 from api.db.database import get_db
 from api.v1.models.blog import Blog
 from api.v1.schemas.blog import (
-    BlogCreateResponseSchema,
     BlogCreateSchema,
     BlogListItemResponseSchema,
     BlogListResponseSchema,
+    BlogResponseSchema,
 )
 
 blog = APIRouter(prefix="/blogs", tags=["Blog"])
@@ -21,13 +21,13 @@ logger = logging.getLogger("api")
 
 @blog.post(
     "",
-    response_model=BlogCreateResponseSchema,
+    response_model=BlogResponseSchema,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_blog(
     blog: BlogCreateSchema,
     db: Session = Depends(get_db),
-) -> BlogCreateResponseSchema:
+) -> BlogResponseSchema:
     try:
         existing_blog = db.query(Blog).filter(Blog.title == blog.title).first()
         if existing_blog:
@@ -48,7 +48,7 @@ async def create_blog(
         db.refresh(new_blog)
         logger.info(f"Blog post '{new_blog.title}' created successfully.")
 
-        return BlogCreateResponseSchema.model_validate(new_blog.__dict__)
+        return BlogResponseSchema.model_validate(new_blog.__dict__)
 
     except HTTPException as http_err:
         logger.warning(f"HTTP error occurred: {http_err.detail}")
@@ -126,4 +126,52 @@ async def list_blog(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
+        )
+
+
+@blog.get(
+    "/{id}",
+    response_model=BlogResponseSchema,
+    status_code=status.HTTP_200_OK,
+)
+async def read_blog(
+    id: int,
+    db: Session = Depends(get_db),
+) -> BlogResponseSchema:
+    try:
+        blog = (
+            db.query(Blog)
+            .filter(
+                Blog.id == id,
+                not_(Blog.is_deleted),
+            )
+            .first()
+        )
+        if not blog:
+            logger.warning(f"Blog post with ID '{id}' not found.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Blog post not found.",
+            )
+
+        logger.info(f"Blog post with ID '{id}' retrieved successfully.")
+        return BlogResponseSchema.model_validate(blog.__dict__)
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database error occurred: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred.",
+        )
+    except ValueError as e:
+        logger.error(f"Invalid blog post ID '{id}': {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid blog post ID.",
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error occurred: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unexpected error occurred.",
         )

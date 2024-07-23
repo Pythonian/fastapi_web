@@ -6,8 +6,8 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
-class BlogCreateResponseSchema(BaseModel):
-    """Schema for representing a created blog post in the API response."""
+class BlogResponseSchema(BaseModel):
+    """Schema for representing a blog post in the API response."""
 
     id: int
     title: str
