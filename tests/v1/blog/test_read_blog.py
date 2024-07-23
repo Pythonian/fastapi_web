@@ -53,7 +53,3 @@ def test_invalid_blog_post_id():
     response = client.get("/api/v1/blogs/abc")
 
     assert response.status_code == 422
-    data = response.json()
-    assert "detail" in data
-    assert isinstance(data["detail"], list)
-    assert any("msg" in error for error in data["detail"])

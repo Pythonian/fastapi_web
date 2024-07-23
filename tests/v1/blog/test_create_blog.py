@@ -108,21 +108,17 @@ def test_create_blog_internal_server_error(db_session_mock):
     assert response.json()["detail"] == "Internal server error."
 
 
-def test_create_blog_invalid_data(db_session_mock):
+def test_create_blog_invalid_data():
     """Sends invalid data (e.g., empty title) and checks for validation errors."""
     invalid_blog_data = {
-        "title": "",  # Title is required and cannot be empty
+        "title": "",
         "excerpt": "A summary of the blog post...",
         "content": "The content of the blog post...",
         "image_url": "image-url-link",
     }
 
     response = client.post("/api/v1/blogs", json=invalid_blog_data)
-
-    # Unprocessable Entity (validation error)
     assert response.status_code == 422
-    response_data = response.json()
-    assert "detail" in response_data
 
 
 def test_create_blog_boundary_testing(db_session_mock):

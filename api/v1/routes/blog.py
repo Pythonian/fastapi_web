@@ -163,15 +163,54 @@ async def read_blog(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
         )
-    except ValueError as e:
-        logger.error(f"Invalid blog post ID '{id}': {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid blog post ID.",
-        )
     except Exception as e:
         logger.error(f"Unexpected error occurred: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Unexpected error occurred.",
+        )
+
+
+@blog.delete(
+    "/{id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def delete_blog(
+    id: int,
+    db: Session = Depends(get_db),
+) -> None:
+    try:
+        blog_to_delete = (
+            db.query(Blog)
+            .filter(
+                Blog.id == id,
+                not_(Blog.is_deleted),
+            )
+            .first()
+        )
+        if not blog_to_delete:
+            logger.warning(f"Blog post with ID '{id}' not found.")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Blog post with given id not found.",
+            )
+
+        blog_to_delete.is_deleted = True
+        db.commit()
+        logger.info(f"Blog post '{blog_to_delete.title}' deleted successfully.")
+
+    except SQLAlchemyError as e:
+        logger.error(f"Database error occurred: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error occurred.",
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error occurred: {e}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error.",
         )
