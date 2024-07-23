@@ -20,9 +20,6 @@ TOX = $(VENV_DIR)/bin/tox
 # Define the pre-commit executable within the virtual environment
 PRE_COMMIT = $(VENV_DIR)/bin/pre-commit
 
-# Define the uvicorn executable within the virtual environment
-UVICORN = $(VENV_DIR)/bin/uvicorn
-
 # Define the alembic executable within the virtual environment
 ALEMBIC = $(VENV_DIR)/bin/alembic
 
@@ -53,7 +50,7 @@ check: ## Run all checks using tox and pre-commit
 	@echo "All checks passed"
 
 run: ## Run the development server
-	$(UVICORN) main:app --reload
+	@fastapi dev
 
 clean: ## Clean up the project
 	@echo "Cleaning up the project of temporary files and directories..."

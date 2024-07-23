@@ -70,3 +70,12 @@ class BlogListResponseSchema(BaseModel):
     results: List[BlogListItemResponseSchema]
 
     model_config = {"from_attributes": True}
+
+
+class BlogUpdateSchema(BaseModel):
+    title: str
+    excerpt: str
+    content: str
+    image_url: str
+
+    model_config = {"from_attributes": True}
