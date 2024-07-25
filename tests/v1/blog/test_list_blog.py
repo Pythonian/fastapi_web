@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import SQLAlchemyError
 
 from api.db.database import get_db
 from api.v1.models.blog import Blog
@@ -123,3 +124,17 @@ def test_soft_deleted_blog_post_access_control(db_session_mock):
     assert data["next"] is None
     assert data["previous"] is None
     assert len(data["results"]) == 0
+
+
+def test_database_error(db_session_mock, mocker):
+    """Simulate a database error by raising an SQLAlchemyError."""
+    mocker.patch(
+        "api.v1.services.blog.BlogService.list_blog",
+        side_effect=SQLAlchemyError("Database error"),
+    )
+
+    response = client.get("/api/v1/blogs")
+
+    assert response.status_code == 500
+    data = response.json()
+    assert data["detail"] == "Database error occurred."

@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import SQLAlchemyError
 
 from api.db.database import get_db
 from api.v1.models.blog import Blog
@@ -75,10 +76,27 @@ def test_invalid_method():
 
 
 def test_internal_server_error(mocker):
-    mocker.patch("api.v1.routes.blog", side_effect=Exception("Test exception"))
+    mocker.patch(
+        "api.v1.services.blog.BlogService.read_blog",
+        side_effect=Exception("Test exception"),
+    )
 
     response = client.get("/api/v1/blogs/1")
 
     assert response.status_code == 500
     data = response.json()
     assert data["detail"] == "Internal server error."
+
+
+def test_database_error(db_session_mock, mocker):
+    """Simulate a database error by raising an SQLAlchemyError."""
+    mocker.patch(
+        "api.v1.services.blog.BlogService.read_blog",
+        side_effect=SQLAlchemyError("Database error"),
+    )
+
+    response = client.get("/api/v1/blogs/1")
+
+    assert response.status_code == 500
+    data = response.json()
+    assert data["detail"] == "Database error occurred."

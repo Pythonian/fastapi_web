@@ -1,19 +1,17 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import not_
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
-from api.v1.models.blog import Blog
 from api.v1.schemas.blog import (
     BlogCreateSchema,
-    BlogListItemResponseSchema,
     BlogListResponseSchema,
     BlogResponseSchema,
     BlogUpdateSchema,
 )
+from api.v1.services.blog import BlogService
 
 blog = APIRouter(prefix="/blogs", tags=["Blog"])
 
@@ -30,45 +28,19 @@ async def create_blog(
     db: Session = Depends(get_db),
 ) -> BlogResponseSchema:
     try:
-        existing_blog = db.query(Blog).filter(Blog.title == blog.title).first()
-        if existing_blog:
-            logger.warning(f"Blog post with title '{blog.title}' already exists.")
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="A blog post with this title already exists.",
-            )
-
-        new_blog = Blog(
-            title=blog.title,
-            excerpt=blog.excerpt,
-            content=blog.content,
-            image_url=blog.image_url,
+        return BlogService.create_blog(db, blog)
+    except ValueError as e:
+        logger.warning(str(e))
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e),
         )
-        db.add(new_blog)
-        db.commit()
-        db.refresh(new_blog)
-        logger.info(f"Blog post '{new_blog.title}' created successfully.")
-
-        return BlogResponseSchema(
-            id=new_blog.id,
-            title=new_blog.title,
-            excerpt=new_blog.excerpt,
-            content=new_blog.content,
-            image_url=new_blog.image_url,
-            created_at=new_blog.created_at,
-            updated_at=new_blog.updated_at,
-        )
-
-    except HTTPException as http_err:
-        raise http_err
-
-    except SQLAlchemyError as sql_err:
-        logger.error(f"Database error occurred: {sql_err}")
+    except SQLAlchemyError as e:
+        logger.error(f"Database error occurred: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
         )
-
     except Exception as e:
         logger.error(f"Internal server error: {e}")
         raise HTTPException(
@@ -88,41 +60,7 @@ async def list_blog(
     db: Session = Depends(get_db),
 ) -> BlogListResponseSchema:
     try:
-        offset = (page - 1) * page_size
-        query = (
-            db.query(Blog)
-            .filter(not_(Blog.is_deleted))
-            .order_by(Blog.created_at.desc())
-        )
-        total_count = query.count()
-        blogs = query.offset(offset).limit(page_size).all()
-
-        next_page = None
-        if offset + page_size < total_count:
-            next_page = f"/api/v1/blogs?page={page + 1}&page_size={page_size}"
-
-        prev_page = None
-        if page > 1:
-            prev_page = f"/api/v1/blogs?page={page - 1}&page_size={page_size}"
-
-        results = [
-            BlogListItemResponseSchema(
-                id=blog.id,
-                title=blog.title,
-                excerpt=blog.excerpt,
-                image_url=blog.image_url,
-                created_at=blog.created_at,
-            )
-            for blog in blogs
-        ]
-
-        return BlogListResponseSchema(
-            count=total_count,
-            next=next_page,
-            previous=prev_page,
-            results=results,
-        )
-
+        return BlogService.list_blog(db, page, page_size)
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred: {e}")
         raise HTTPException(
@@ -147,27 +85,13 @@ async def read_blog(
     db: Session = Depends(get_db),
 ) -> BlogResponseSchema:
     try:
-        blog = (
-            db.query(Blog)
-            .filter(
-                Blog.id == id,
-                not_(Blog.is_deleted),
-            )
-            .first()
+        return BlogService.read_blog(db, id)
+    except ValueError as e:
+        logger.warning(str(e))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
         )
-        if not blog:
-            logger.warning(f"Blog post with ID '{id}' not found.")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Blog post not found.",
-            )
-
-        logger.info(f"Blog post with ID '{id}' retrieved successfully.")
-        return BlogResponseSchema.model_validate(blog.__dict__)
-
-    except HTTPException as http_err:
-        raise http_err
-
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred: {e}")
         raise HTTPException(
@@ -187,81 +111,29 @@ async def read_blog(
     response_model=BlogResponseSchema,
     status_code=status.HTTP_200_OK,
 )
-def update_blog(
+async def update_blog(
     id: int,
     blog_update: BlogUpdateSchema,
     db: Session = Depends(get_db),
 ) -> BlogResponseSchema:
     try:
-        # Fetch the blog post to be updated
-        blog = (
-            db.query(Blog)
-            .filter(
-                Blog.id == id,
-                not_(Blog.is_deleted),
-            )
-            .first()
+        return BlogService.update_blog(db, id, blog_update)
+    except ValueError as e:
+        logger.warning(str(e))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND
+            if "not found" in str(e).lower()
+            else status.HTTP_409_CONFLICT,
+            detail=str(e),
         )
-        if not blog:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Blog post not found.",
-            )
-
-        # Get the updated data
-        update_data = blog_update.model_dump(exclude_unset=True)
-
-        # Check for title uniqueness
-        if "title" in update_data and update_data["title"] != blog.title:
-            existing_blog = (
-                db.query(Blog)
-                .filter(
-                    Blog.title == update_data["title"],
-                    not_(Blog.is_deleted),
-                )
-                .first()
-            )
-            if existing_blog:
-                logger.warning(
-                    f"Blog post with title '{update_data['title']}' already exists."
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_409_CONFLICT,
-                    detail="A blog post with this title already exists.",
-                )
-
-        # Update fields if they are provided
-        for field, value in update_data.items():
-            setattr(blog, field, value)
-
-        db.commit()
-        db.refresh(blog)
-        logger.info(f"Blog post '{blog.title}' updated successfully.")
-
-        return BlogResponseSchema(
-            id=blog.id,
-            title=blog.title,
-            excerpt=blog.excerpt,
-            content=blog.content,
-            image_url=blog.image_url,
-            created_at=blog.created_at,
-            updated_at=blog.updated_at,
-        )
-
-    except HTTPException as http_err:
-        raise http_err
-
-    except SQLAlchemyError as sql_err:
-        logger.error(f"Database error occurred: {sql_err}")
-        db.rollback()
+    except SQLAlchemyError as e:
+        logger.error(f"Database error occurred: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
         )
-
     except Exception as e:
         logger.error(f"Internal server error: {e}")
-        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
@@ -277,39 +149,21 @@ async def delete_blog(
     db: Session = Depends(get_db),
 ) -> None:
     try:
-        blog_to_delete = (
-            db.query(Blog)
-            .filter(
-                Blog.id == id,
-                not_(Blog.is_deleted),
-            )
-            .first()
+        BlogService.delete_blog(db, id)
+    except ValueError as e:
+        logger.warning(str(e))
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
         )
-        if not blog_to_delete:
-            logger.warning(f"Blog post with ID '{id}' not found.")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Blog post with given id not found.",
-            )
-
-        blog_to_delete.is_deleted = True
-        db.commit()
-        logger.info(f"Blog post '{blog_to_delete.title}' deleted successfully.")
-
-    except HTTPException as http_err:
-        raise http_err
-
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred: {e}")
-        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
         )
-
     except Exception as e:
         logger.error(f"Internal server error: {e}")
-        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",

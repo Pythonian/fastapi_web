@@ -3,6 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import SQLAlchemyError
 
 from api.db.database import get_db
 from api.v1.models.blog import Blog
@@ -154,3 +155,23 @@ def test_create_blog_boundary_testing(db_session_mock):
         response_data["created_at"], str
     )  # Check if it's a string representation of a datetime
     assert isinstance(response_data["updated_at"], str)
+
+
+def test_database_error(db_session_mock, mocker):
+    """Simulate a database error by raising an SQLAlchemyError."""
+    blog_data = {
+        "title": "New Blog Post",
+        "excerpt": "A summary of the blog post...",
+        "content": "The content of the blog post...",
+        "image_url": "image-url-link",
+    }
+    mocker.patch(
+        "api.v1.services.blog.BlogService.create_blog",
+        side_effect=SQLAlchemyError("Database error"),
+    )
+
+    response = client.post("/api/v1/blogs", json=blog_data)
+
+    assert response.status_code == 500
+    data = response.json()
+    assert data["detail"] == "Database error occurred."
