@@ -1,15 +1,16 @@
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.exceptions import RequestValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from api.db.database import get_db
 from api.v1.schemas.blog import (
-    BlogCreateSchema,
-    BlogListResponseSchema,
-    BlogResponseSchema,
-    BlogUpdateSchema,
+    BlogCreate,
+    BlogListResponse,
+    BlogResponse,
+    BlogUpdate,
 )
 from api.v1.services.blog import BlogService
 
@@ -20,13 +21,13 @@ logger = logging.getLogger("api")
 
 @blog.post(
     "",
-    response_model=BlogResponseSchema,
+    response_model=BlogResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_blog(
-    blog: BlogCreateSchema,
+    blog: BlogCreate,
     db: Session = Depends(get_db),
-) -> BlogResponseSchema:
+) -> BlogResponse:
     try:
         return BlogService.create_blog(db, blog)
     except ValueError as e:
@@ -51,14 +52,14 @@ async def create_blog(
 
 @blog.get(
     "",
-    response_model=BlogListResponseSchema,
+    response_model=BlogListResponse,
     status_code=status.HTTP_200_OK,
 )
 async def list_blog(
     page: int = Query(1, ge=1),
     page_size: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-) -> BlogListResponseSchema:
+) -> BlogListResponse:
     try:
         return BlogService.list_blog(db, page, page_size)
     except SQLAlchemyError as e:
@@ -77,13 +78,13 @@ async def list_blog(
 
 @blog.get(
     "/{id}",
-    response_model=BlogResponseSchema,
+    response_model=BlogResponse,
     status_code=status.HTTP_200_OK,
 )
 async def read_blog(
     id: int,
     db: Session = Depends(get_db),
-) -> BlogResponseSchema:
+) -> BlogResponse:
     try:
         return BlogService.read_blog(db, id)
     except ValueError as e:
@@ -108,16 +109,22 @@ async def read_blog(
 
 @blog.patch(
     "/{id}",
-    response_model=BlogResponseSchema,
+    response_model=BlogResponse,
     status_code=status.HTTP_200_OK,
 )
 async def update_blog(
     id: int,
-    blog_update: BlogUpdateSchema,
+    blog_update: BlogUpdate,
     db: Session = Depends(get_db),
-) -> BlogResponseSchema:
+) -> BlogResponse:
     try:
         return BlogService.update_blog(db, id, blog_update)
+    except RequestValidationError as e:
+        logger.warning(f"Validation error: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=e.errors(),
+        )
     except ValueError as e:
         logger.warning(str(e))
         raise HTTPException(

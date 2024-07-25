@@ -3,11 +3,11 @@ from sqlalchemy.orm import Session
 
 from api.v1.models.blog import Blog
 from api.v1.schemas.blog import (
-    BlogCreateSchema,
-    BlogListItemResponseSchema,
-    BlogListResponseSchema,
-    BlogResponseSchema,
-    BlogUpdateSchema,
+    BlogCreate,
+    BlogListItemResponse,
+    BlogListResponse,
+    BlogResponse,
+    BlogUpdate,
 )
 
 
@@ -15,8 +15,8 @@ class BlogService:
     @staticmethod
     def create_blog(
         db: Session,
-        blog: BlogCreateSchema,
-    ) -> BlogResponseSchema:
+        blog: BlogCreate,
+    ) -> BlogResponse:
         existing_blog = db.query(Blog).filter(Blog.title == blog.title).first()
         if existing_blog:
             raise ValueError("A blog post with this title already exists.")
@@ -31,7 +31,7 @@ class BlogService:
         db.commit()
         db.refresh(new_blog)
 
-        return BlogResponseSchema(
+        return BlogResponse(
             id=new_blog.id,
             title=new_blog.title,
             excerpt=new_blog.excerpt,
@@ -46,7 +46,7 @@ class BlogService:
         db: Session,
         page: int,
         page_size: int,
-    ) -> BlogListResponseSchema:
+    ) -> BlogListResponse:
         offset = (page - 1) * page_size
         query = (
             db.query(Blog)
@@ -65,7 +65,7 @@ class BlogService:
             prev_page = f"/api/v1/blogs?page={page - 1}&page_size={page_size}"
 
         results = [
-            BlogListItemResponseSchema(
+            BlogListItemResponse(
                 id=blog.id,
                 title=blog.title,
                 excerpt=blog.excerpt,
@@ -75,7 +75,7 @@ class BlogService:
             for blog in blogs
         ]
 
-        return BlogListResponseSchema(
+        return BlogListResponse(
             count=total_count,
             next=next_page,
             previous=prev_page,
@@ -86,7 +86,7 @@ class BlogService:
     def read_blog(
         db: Session,
         id: int,
-    ) -> BlogResponseSchema:
+    ) -> BlogResponse:
         blog = (
             db.query(Blog)
             .filter(
@@ -98,14 +98,14 @@ class BlogService:
         if not blog:
             raise ValueError("Blog post not found.")
 
-        return BlogResponseSchema.model_validate(blog.__dict__)
+        return BlogResponse.model_validate(blog.__dict__)
 
     @staticmethod
     def update_blog(
         db: Session,
         id: int,
-        blog_update: BlogUpdateSchema,
-    ) -> BlogResponseSchema:
+        blog_update: BlogUpdate,
+    ) -> BlogResponse:
         blog = (
             db.query(Blog)
             .filter(
@@ -137,7 +137,7 @@ class BlogService:
         db.commit()
         db.refresh(blog)
 
-        return BlogResponseSchema(
+        return BlogResponse(
             id=blog.id,
             title=blog.title,
             excerpt=blog.excerpt,

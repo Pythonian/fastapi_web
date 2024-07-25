@@ -134,15 +134,32 @@ def test_update_blog_internal_server_error(db_session_mock):
     assert response.json()["detail"] == "Internal server error."
 
 
-def test_update_blog_invalid_data():
-    """Send requests with invalid data and check for validation errors."""
+def test_update_blog_invalid_data(db_session_mock):
+    """Ensure that the endpoint returns a 422 status code when updating with invalid data."""
+    existing_blog = Blog(
+        id=1,
+        title="Existing Blog Post",
+        excerpt="A summary of the blog post...",
+        content="The content of the blog post...",
+        image_url="image-url-link",
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
+    )
     invalid_data = {
+        "title": "Short",
         "excerpt": "An updated summary...",
-        "content": "Updated content...",
-        "image_url": "updated-image-url-link",
     }
 
-    response = client.patch("/api/v1/blogs/1", json=invalid_data)
+    db_session_mock.query.return_value.filter.return_value.first.side_effect = [
+        existing_blog,  # Return the existing blog for the first query
+        None,  # Return None for the second query to simulate no conflict
+    ]
+    db_session_mock.commit.side_effect = lambda: None
+    db_session_mock.refresh.side_effect = lambda blog: setattr(
+        blog, "updated_at", datetime.now(timezone.utc)
+    )
+
+    response = client.patch(f"/api/v1/blogs/{existing_blog.id}", json=invalid_data)
 
     assert response.status_code == 422
 
