@@ -14,19 +14,20 @@ client = TestClient(app)
 
 @pytest.fixture
 def db_session_mock():
+    """Create a mock database session."""
     return MagicMock()
 
 
 @pytest.fixture(autouse=True)
 def override_get_db(db_session_mock):
+    """Override the get_db dependency with a mock session."""
     app.dependency_overrides[get_db] = lambda: db_session_mock
     yield
     app.dependency_overrides[get_db] = None
 
 
 def test_create_blog_success(db_session_mock):
-    """Checks if a new blog post can be created successfully and
-    validates the response data."""
+    """Test successful blog post creation."""
     new_blog_data = {
         "title": "New Blog Post",
         "excerpt": "A summary of the blog post...",
@@ -68,9 +69,7 @@ def test_create_blog_success(db_session_mock):
 
 
 def test_create_blog_conflict(db_session_mock):
-    """Simulates a conflict scenario by creating a blog post with a title that
-    already exists, then checks for the correct status code and error message."""
-    # Arrange
+    """Test blog post creation with blog title that already exists."""
     new_blog_data = {
         "title": "Existing Blog Post",
         "excerpt": "A summary of the blog post...",
@@ -80,20 +79,20 @@ def test_create_blog_conflict(db_session_mock):
 
     # Mock the database query for checking existing blog
     db_session_mock.query.return_value.filter.return_value.first.return_value = Blog(
-        title="Existing Blog Post", excerpt="...", content="...", image_url="..."
+        title="Existing Blog Post",
+        excerpt="...",
+        content="...",
+        image_url="...",
     )
 
-    # Act
     response = client.post("/api/v1/blogs", json=new_blog_data)
 
-    # Assert
     assert response.status_code == 409
     assert response.json()["detail"] == "A blog post with this title already exists."
 
 
 def test_create_blog_internal_server_error(db_session_mock):
-    """Simulates an internal server error and checks for the
-    correct status code and error message."""
+    """Test blog post creation with internal server error."""
     new_blog_data = {
         "title": "New Blog Post",
         "excerpt": "A summary of the blog post...",
@@ -110,7 +109,7 @@ def test_create_blog_internal_server_error(db_session_mock):
 
 
 def test_create_blog_invalid_data():
-    """Sends invalid data (e.g., empty title) and checks for validation errors."""
+    """Test blog post creation with invalid data."""
     invalid_blog_data = {
         "title": "",
         "excerpt": "A summary of the blog post...",
@@ -123,8 +122,7 @@ def test_create_blog_invalid_data():
 
 
 def test_create_blog_boundary_testing(db_session_mock):
-    """Tests the maximum length constraints for the title and excerpt fields,
-    ensuring the API handles boundary conditions correctly."""
+    """Test maximum length constraints for title and excerpt."""
 
     boundary_blog_data = {
         "title": "T" * 255,  # Maximum allowed length for title

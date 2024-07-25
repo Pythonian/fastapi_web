@@ -14,17 +14,20 @@ client = TestClient(app)
 
 @pytest.fixture
 def db_session_mock():
+    """Create a mock database session."""
     return MagicMock()
 
 
 @pytest.fixture(autouse=True)
 def override_get_db(db_session_mock):
+    """Override the get_db dependency with a mock session."""
     app.dependency_overrides[get_db] = lambda: db_session_mock
     yield
     app.dependency_overrides[get_db] = None
 
 
 def test_successful_soft_delete_blog_post(db_session_mock):
+    """Test successful soft deletion of a blog post."""
     blog = Blog(
         id=1,
         title="Test Blog Post",
@@ -45,6 +48,7 @@ def test_successful_soft_delete_blog_post(db_session_mock):
 
 
 def test_delete_invalid_blog_id(db_session_mock):
+    """Test deletion of blog post with invalid ID."""
     response = client.delete("/api/v1/blogs/abc")
 
     assert response.status_code == 422

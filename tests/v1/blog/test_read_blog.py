@@ -14,17 +14,20 @@ client = TestClient(app)
 
 @pytest.fixture
 def db_session_mock():
+    """Create a mock database session."""
     return MagicMock()
 
 
 @pytest.fixture(autouse=True)
 def override_get_db(db_session_mock):
+    """Override the get_db dependency with a mock session."""
     app.dependency_overrides[get_db] = lambda: db_session_mock
     yield
     app.dependency_overrides[get_db] = None
 
 
 def test_successful_retrieval_of_blog_post(db_session_mock):
+    """Test successful retrieval of a blog post."""
     blog = Blog(
         id=1,
         title="Sample Blog Post",
@@ -51,13 +54,14 @@ def test_successful_retrieval_of_blog_post(db_session_mock):
 
 
 def test_invalid_blog_post_id():
+    """Test retrieval of blog post with invalid ID."""
     response = client.get("/api/v1/blogs/abc")
 
     assert response.status_code == 422
 
 
 def test_deleted_blog_post_not_found(db_session_mock):
-    """Simulate a request to retrieve a blog post that has been deleted."""
+    """Test retrieval of a deleted blog post."""
     db_session_mock.query.return_value.filter.return_value.first.return_value = None
 
     response = client.get("/api/v1/blogs/1")
@@ -68,6 +72,7 @@ def test_deleted_blog_post_not_found(db_session_mock):
 
 
 def test_invalid_method():
+    """Test invalid method usage on the blog post endpoint."""
     response = client.post("/api/v1/blogs/1")
 
     assert response.status_code == 405
@@ -76,6 +81,7 @@ def test_invalid_method():
 
 
 def test_internal_server_error(mocker):
+    """Test retrieval of blog post with internal server error."""
     mocker.patch(
         "api.v1.services.blog.BlogService.read_blog",
         side_effect=Exception("Test exception"),

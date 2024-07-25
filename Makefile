@@ -39,7 +39,10 @@ install: ## Install development dependencies
 	cp .env.example .env
 	@echo "Development dependencies has been setup."
 
-migrate: ## Run the database migration
+migration: ## Create the database migration script
+	$(ALEMBIC) revision --autogenerate
+
+migrate: ## Apply the database migration
 	$(ALEMBIC) upgrade head
 
 check: ## Run all checks using tox and pre-commit

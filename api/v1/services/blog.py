@@ -12,11 +12,26 @@ from api.v1.schemas.blog import (
 
 
 class BlogService:
+    """Service class for blog operations."""
+
     @staticmethod
     def create_blog(
         db: Session,
         blog: BlogCreate,
     ) -> BlogResponse:
+        """
+        Create a new blog post.
+
+        Args:
+            db (Session): The database session.
+            blog (BlogCreate): The blog post data to create.
+
+        Returns:
+            BlogResponse: The created blog post response.
+
+        Raises:
+            ValueError: If a blog post with the same title already exists.
+        """
         existing_blog = db.query(Blog).filter(Blog.title == blog.title).first()
         if existing_blog:
             raise ValueError("A blog post with this title already exists.")
@@ -47,6 +62,17 @@ class BlogService:
         page: int,
         page_size: int,
     ) -> BlogListResponse:
+        """
+        Retrieve a list of blog posts with pagination.
+
+        Args:
+            db (Session): The database session.
+            page (int): The page number for pagination.
+            page_size (int): The number of items per page.
+
+        Returns:
+            BlogListResponse: The list of blog posts with pagination info.
+        """
         offset = (page - 1) * page_size
         query = (
             db.query(Blog)
@@ -56,13 +82,14 @@ class BlogService:
         total_count = query.count()
         blogs = query.offset(offset).limit(page_size).all()
 
-        next_page = None
-        if offset + page_size < total_count:
-            next_page = f"/api/v1/blogs?page={page + 1}&page_size={page_size}"
-
-        prev_page = None
-        if page > 1:
-            prev_page = f"/api/v1/blogs?page={page - 1}&page_size={page_size}"
+        next_page = (
+            f"/api/v1/blogs?page={page + 1}&page_size={page_size}"
+            if offset + page_size < total_count
+            else None
+        )
+        prev_page = (
+            f"/api/v1/blogs?page={page - 1}&page_size={page_size}" if page > 1 else None
+        )
 
         results = [
             BlogListItemResponse(
@@ -87,6 +114,19 @@ class BlogService:
         db: Session,
         id: int,
     ) -> BlogResponse:
+        """
+        Retrieve a blog post by ID.
+
+        Args:
+            db (Session): The database session.
+            id (int): The ID of the blog post to retrieve.
+
+        Returns:
+            BlogResponse: The blog post response.
+
+        Raises:
+            ValueError: If the blog post is not found.
+        """
         blog = (
             db.query(Blog)
             .filter(
@@ -98,7 +138,15 @@ class BlogService:
         if not blog:
             raise ValueError("Blog post not found.")
 
-        return BlogResponse.model_validate(blog.__dict__)
+        return BlogResponse(
+            id=blog.id,
+            title=blog.title,
+            excerpt=blog.excerpt,
+            content=blog.content,
+            image_url=blog.image_url,
+            created_at=blog.created_at,
+            updated_at=blog.updated_at,
+        )
 
     @staticmethod
     def update_blog(
@@ -106,6 +154,21 @@ class BlogService:
         id: int,
         blog_update: BlogUpdate,
     ) -> BlogResponse:
+        """
+        Update an existing blog post by ID.
+
+        Args:
+            db (Session): The database session.
+            id (int): The ID of the blog post to update.
+            blog_update (BlogUpdate): The updated blog post data.
+
+        Returns:
+            BlogResponse: The updated blog post response.
+
+        Raises:
+            ValueError: If the blog post is not found or a blog post
+                        with the updated title already exists.
+        """
         blog = (
             db.query(Blog)
             .filter(
@@ -152,6 +215,16 @@ class BlogService:
         db: Session,
         id: int,
     ) -> None:
+        """
+        Delete a blog post by ID (soft delete).
+
+        Args:
+            db (Session): The database session.
+            id (int): The ID of the blog post to delete.
+
+        Raises:
+            ValueError: If the blog post is not found.
+        """
         blog_to_delete = (
             db.query(Blog)
             .filter(

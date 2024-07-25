@@ -14,18 +14,20 @@ client = TestClient(app)
 
 @pytest.fixture
 def db_session_mock():
+    """Create a mock database session."""
     return MagicMock()
 
 
 @pytest.fixture(autouse=True)
 def override_get_db(db_session_mock):
+    """Override the get_db dependency with a mock session."""
     app.dependency_overrides[get_db] = lambda: db_session_mock
     yield
     app.dependency_overrides[get_db] = None
 
 
 def test_update_blog_success(db_session_mock):
-    """Ensure that the endpoint successfully updates the data of an existing blog post."""
+    """Test successful blog post update."""
     existing_blog = Blog(
         id=1,
         title="Existing Blog Post",
@@ -63,7 +65,7 @@ def test_update_blog_success(db_session_mock):
 
 
 def test_update_blog_conflict(db_session_mock):
-    """Simulate a request to update a blog post with a title that already exists."""
+    """Test blog post update with conflicting title."""
     existing_blog = Blog(
         id=1,
         title="Existing Blog Post",
@@ -101,7 +103,7 @@ def test_update_blog_conflict(db_session_mock):
 
 
 def test_update_blog_not_found(db_session_mock):
-    """Simulate a request to update a blog post that does not exist."""
+    """Test blog post update when not found."""
     updated_data = {
         "title": "Updated Blog Post",
         "excerpt": "An updated summary...",
@@ -118,7 +120,7 @@ def test_update_blog_not_found(db_session_mock):
 
 
 def test_update_blog_internal_server_error(db_session_mock):
-    """Simulate an internal server error to raise an exception."""
+    """Test blog post update with internal server error."""
     updated_data = {
         "title": "Updated Blog Post",
         "excerpt": "An updated summary...",
@@ -135,7 +137,7 @@ def test_update_blog_internal_server_error(db_session_mock):
 
 
 def test_update_blog_invalid_data(db_session_mock):
-    """Ensure that the endpoint returns a 422 status code when updating with invalid data."""
+    """Test blog post update with invalid data."""
     existing_blog = Blog(
         id=1,
         title="Existing Blog Post",
@@ -165,7 +167,7 @@ def test_update_blog_invalid_data(db_session_mock):
 
 
 def test_update_blog_boundary_testing(db_session_mock):
-    """Test the maximum length constraints for the title and excerpt fields."""
+    """Test maximum length constraints for title and excerpt."""
     existing_blog = Blog(
         id=1,
         title="Existing Blog Post",
@@ -205,7 +207,7 @@ def test_update_blog_boundary_testing(db_session_mock):
 
 
 def test_database_error(db_session_mock, mocker):
-    """Simulate a database error by raising an SQLAlchemyError."""
+    """Test database error during blog post update."""
     updated_data = {
         "title": "Updated Blog Post",
         "excerpt": "An updated summary...",

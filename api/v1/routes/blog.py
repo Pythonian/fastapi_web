@@ -28,6 +28,20 @@ async def create_blog(
     blog: BlogCreate,
     db: Session = Depends(get_db),
 ) -> BlogResponse:
+    """
+    Create a new blog post.
+
+    Args:
+        blog (BlogCreate): The blog post data to create.
+        db (Session): The database session dependency.
+
+    Returns:
+        BlogResponse: The created blog post response.
+
+    Raises:
+        HTTPException: If a blog post with the same title already
+                       exists or a database error occurs.
+    """
     try:
         return BlogService.create_blog(db, blog)
     except ValueError as e:
@@ -60,6 +74,20 @@ async def list_blog(
     page_size: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
 ) -> BlogListResponse:
+    """
+    Retrieve a list of blog posts with pagination.
+
+    Args:
+        page (int): The page number for pagination.
+        page_size (int): The number of items per page.
+        db (Session): The database session dependency.
+
+    Returns:
+        BlogListResponse: The list of blog posts with pagination info.
+
+    Raises:
+        HTTPException: If a database error occurs.
+    """
     try:
         return BlogService.list_blog(db, page, page_size)
     except SQLAlchemyError as e:
@@ -85,6 +113,19 @@ async def read_blog(
     id: int,
     db: Session = Depends(get_db),
 ) -> BlogResponse:
+    """
+    Retrieve a blog post by ID.
+
+    Args:
+        id (int): The ID of the blog post to retrieve.
+        db (Session): The database session dependency.
+
+    Returns:
+        BlogResponse: The blog post response.
+
+    Raises:
+        HTTPException: If the blog post is not found or a database error occurs.
+    """
     try:
         return BlogService.read_blog(db, id)
     except ValueError as e:
@@ -117,6 +158,21 @@ async def update_blog(
     blog_update: BlogUpdate,
     db: Session = Depends(get_db),
 ) -> BlogResponse:
+    """
+    Update an existing blog post by ID.
+
+    Args:
+        id (int): The ID of the blog post to update.
+        blog_update (BlogUpdate): The updated blog post data.
+        db (Session): The database session dependency.
+
+    Returns:
+        BlogResponse: The updated blog post response.
+
+    Raises:
+        HTTPException: If the blog post is not found, a conflict occurs,
+                       or a database error occurs.
+    """
     try:
         return BlogService.update_blog(db, id, blog_update)
     except RequestValidationError as e:
@@ -155,6 +211,16 @@ async def delete_blog(
     id: int,
     db: Session = Depends(get_db),
 ) -> None:
+    """
+    Delete a blog post by ID (soft delete).
+
+    Args:
+        id (int): The ID of the blog post to delete.
+        db (Session): The database session dependency.
+
+    Raises:
+        HTTPException: If the blog post is not found or a database error occurs.
+    """
     try:
         BlogService.delete_blog(db, id)
     except ValueError as e:

@@ -14,17 +14,20 @@ client = TestClient(app)
 
 @pytest.fixture
 def db_session_mock():
+    """Create a mock database session."""
     return MagicMock()
 
 
 @pytest.fixture(autouse=True)
 def override_get_db(db_session_mock):
+    """Override the get_db dependency with a mock session."""
     app.dependency_overrides[get_db] = lambda: db_session_mock
     yield
     app.dependency_overrides[get_db] = None
 
 
 def test_successful_retrieval_of_paginated_blog_posts(db_session_mock):
+    """Test successful retrieval of paginated blog posts."""
     blog1 = Blog(
         id=1,
         title="My First Blog",
@@ -59,6 +62,7 @@ def test_successful_retrieval_of_paginated_blog_posts(db_session_mock):
 
 
 def test_no_blog_posts_present(db_session_mock):
+    """Test retrieval with no blog posts available."""
     db_session_mock.query().filter().order_by().offset().limit().all.return_value = []
     db_session_mock.query().filter().order_by().count.return_value = 0
 
@@ -73,6 +77,7 @@ def test_no_blog_posts_present(db_session_mock):
 
 
 def test_internal_server_error(mocker):
+    """Simulate an internal server error with a generic exception."""
     mocker.patch("api.v1.routes.blog", side_effect=Exception("Test exception"))
 
     response = client.get("/api/v1/blogs?page=1&page_size=10")
@@ -83,6 +88,7 @@ def test_internal_server_error(mocker):
 
 
 def test_invalid_page_or_page_size_parameters():
+    """Test invalid page or page size parameters."""
     # Test invalid page parameter
     response = client.get("/api/v1/blogs?page=-1&page_size=10")
     assert response.status_code == 422
@@ -97,6 +103,7 @@ def test_invalid_page_or_page_size_parameters():
 
 
 def test_invalid_method():
+    """Test invalid method on the list blog posts endpoint."""
     response = client.delete("/api/v1/blogs")
 
     assert response.status_code == 405
@@ -104,7 +111,8 @@ def test_invalid_method():
     assert data["detail"] == "Method Not Allowed"
 
 
-def test_soft_deleted_blog_post_access_control(db_session_mock):
+def test_soft_deleted_blog_post_exclusion(db_session_mock):
+    """Verify that soft-deleted blog posts are excluded from the list."""
     _ = Blog(
         id=1,
         title="Soft Deleted Blog",
@@ -127,7 +135,7 @@ def test_soft_deleted_blog_post_access_control(db_session_mock):
 
 
 def test_database_error(db_session_mock, mocker):
-    """Simulate a database error by raising an SQLAlchemyError."""
+    """Simulate a database error with SQLAlchemyError."""
     mocker.patch(
         "api.v1.services.blog.BlogService.list_blog",
         side_effect=SQLAlchemyError("Database error"),
