@@ -47,3 +47,14 @@ def test_delete_invalid_blog_id(db_session_mock):
     response = client.delete("/api/v1/blogs/abc")
 
     assert response.status_code == 422
+
+
+def test_blog_post_not_found(db_session_mock):
+    """Simulate a request to delete a blog post that does not exist."""
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
+    response = client.delete("/api/v1/blogs/1")
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data["detail"] == "Blog post with given id not found."

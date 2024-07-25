@@ -53,3 +53,32 @@ def test_invalid_blog_post_id():
     response = client.get("/api/v1/blogs/abc")
 
     assert response.status_code == 422
+
+
+def test_deleted_blog_post_not_found(db_session_mock):
+    """Simulate a request to retrieve a blog post that has been deleted."""
+    db_session_mock.query.return_value.filter.return_value.first.return_value = None
+
+    response = client.get("/api/v1/blogs/1")
+
+    assert response.status_code == 404
+    data = response.json()
+    assert data["detail"] == "Blog post not found."
+
+
+def test_invalid_method():
+    response = client.post("/api/v1/blogs/1")
+
+    assert response.status_code == 405
+    data = response.json()
+    assert data["detail"] == "Method Not Allowed"
+
+
+def test_internal_server_error(mocker):
+    mocker.patch("api.v1.routes.blog", side_effect=Exception("Test exception"))
+
+    response = client.get("/api/v1/blogs/1")
+
+    assert response.status_code == 500
+    data = response.json()
+    assert data["detail"] == "Internal server error."

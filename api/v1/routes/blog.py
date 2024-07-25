@@ -60,7 +60,6 @@ async def create_blog(
         )
 
     except HTTPException as http_err:
-        logger.warning(f"HTTP error occurred: {http_err.detail}")
         raise http_err
 
     except SQLAlchemyError as sql_err:
@@ -71,7 +70,7 @@ async def create_blog(
         )
 
     except Exception as e:
-        logger.error(f"Unexpected error occurred: {e}")
+        logger.error(f"Internal server error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
@@ -131,7 +130,7 @@ async def list_blog(
             detail="Database error occurred.",
         )
     except Exception as e:
-        logger.error(f"Unexpected error occurred: {e}")
+        logger.error(f"Internal server error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
@@ -166,6 +165,9 @@ async def read_blog(
         logger.info(f"Blog post with ID '{id}' retrieved successfully.")
         return BlogResponseSchema.model_validate(blog.__dict__)
 
+    except HTTPException as http_err:
+        raise http_err
+
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred: {e}")
         raise HTTPException(
@@ -173,10 +175,10 @@ async def read_blog(
             detail="Database error occurred.",
         )
     except Exception as e:
-        logger.error(f"Unexpected error occurred: {e}")
+        logger.error(f"Internal server error: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Unexpected error occurred.",
+            detail="Internal server error.",
         )
 
 
@@ -247,12 +249,9 @@ def update_blog(
         )
 
     except HTTPException as http_err:
-        # Log the HTTP exception
-        logger.warning(f"HTTP error occurred: {http_err.detail}")
         raise http_err
 
     except SQLAlchemyError as sql_err:
-        # Log SQLAlchemy errors
         logger.error(f"Database error occurred: {sql_err}")
         db.rollback()
         raise HTTPException(
@@ -261,8 +260,7 @@ def update_blog(
         )
 
     except Exception as e:
-        # Log other unexpected errors
-        logger.error(f"Unexpected error occurred: {e}")
+        logger.error(f"Internal server error: {e}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -298,6 +296,9 @@ async def delete_blog(
         db.commit()
         logger.info(f"Blog post '{blog_to_delete.title}' deleted successfully.")
 
+    except HTTPException as http_err:
+        raise http_err
+
     except SQLAlchemyError as e:
         logger.error(f"Database error occurred: {e}")
         db.rollback()
@@ -307,7 +308,7 @@ async def delete_blog(
         )
 
     except Exception as e:
-        logger.error(f"Unexpected error occurred: {e}")
+        logger.error(f"Internal server error: {e}")
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
