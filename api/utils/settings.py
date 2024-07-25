@@ -1,7 +1,6 @@
 from pathlib import Path
 
-from decouple import config
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Use this to build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent
@@ -10,13 +9,11 @@ BASE_DIR = Path(__file__).resolve().parent
 class Settings(BaseSettings):
     """Class to hold application's config values."""
 
-    # Database configurations
-    DB_HOST: str = config("DB_HOST")
-    DB_PORT: int = config("DB_PORT", cast=int)
-    DB_USER: str = config("DB_USER")
-    DB_PASSWORD: str = config("DB_PASSWORD")
-    DB_NAME: str = config("DB_NAME")
-    DB_TYPE: str = config("DB_TYPE")
+    DB_TYPE: str
+    DB_URL: str
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
+# Load settings from the .env file
 settings = Settings()
