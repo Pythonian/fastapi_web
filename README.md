@@ -2,12 +2,19 @@
 
 Welcome to the FastAPI project! Follow these instructions to set up the project on your local machine and get everything running smoothly.
 
+## Project Overview
+
+This FastAPI project is a learning tool and development playground where I am building various app modules to deepen my understanding of FastAPI. The project starts with a blog feature, and I plan to expand it with additional apps as I continue to learn and explore FastAPI's capabilities.
+
+![API Documentation](assets/screenshot.jpeg)
+
 ## Prerequisites
 
 Before you begin, the project assumes the following:
 
 - A Linux environment, or WSL (if using Windows)
 - Python 3.10 or later installed.
+- PostgreSQL installed.
 
 A Makefile has been provided for easy project setup.
 
@@ -69,7 +76,9 @@ A Makefile has been provided for easy project setup.
    make run
    ```
 
-   You can then view the API docs at `http://127.0.0.1:8000/docs/`.
+   The API documentation is available at `http://127.0.0.1:8000/docs/`.
+
+   Or if you prefer using Redocly, at `http://127.0.0.1:8000/redoc`
 
 - **Cleaning Up**
 
