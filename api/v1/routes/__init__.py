@@ -1,5 +1,4 @@
-"""
-Router configuration.
+"""Router configuration.
 
 This module sets up the routing for the API version, including the necessary
 routers for various modules. To add a new router to this configuration, follow
@@ -16,7 +15,7 @@ Usage:
     This configuration is included in the `main.py` application router to
     make the API version endpoints available.
 
-    Example:
+Example:
         from fastapi import FastAPI
         from api.v1.routes import api_version_one
 

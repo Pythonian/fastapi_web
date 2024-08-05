@@ -1,13 +1,13 @@
+import os
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
+from dotenv import load_dotenv
+from sqlalchemy import engine_from_config, pool
 
 from alembic import context
-
-from decouple import config as decouple_config
-
 from api.v1.models.base import Base
+
+load_dotenv()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -19,7 +19,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Set the SQLAlchemy URL dynamically
-database_url = decouple_config("DB_URL")
+database_url = os.getenv("DB_URL")
 config.set_main_option("sqlalchemy.url", database_url)
 
 # add your model's MetaData object here

@@ -1,7 +1,6 @@
 """Blog Schema."""
 
 from datetime import datetime
-from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -13,13 +12,13 @@ class BlogBase(BaseModel):
         ...,
         min_length=10,
         max_length=255,
-        description="Title of the blog post. Must be between 10 and 255 characters.",
+        description="Title of the blog post.",
     )
     excerpt: str = Field(
         ...,
         min_length=20,
         max_length=300,
-        description="Short excerpt of the blog post. Must be between 20 and 300 characters.",
+        description="Short excerpt of the blog post.",
     )
     content: str = Field(
         ...,
@@ -30,46 +29,18 @@ class BlogBase(BaseModel):
         max_length=255,
         description="URL of the blog post image.",
     )
-    is_deleted: Optional[bool] = Field(
-        False,
-        description="Flag to indicate if the blog post is deleted. Defaults to False.",
+    is_deleted: bool | None = Field(
+        default=False,
+        description="Flag to indicate if the blog post is deleted.",
     )
 
 
 class BlogCreate(BlogBase):
     """Schema for creating a new blog post."""
 
-    pass
 
-
-class BlogUpdate(BaseModel):
+class BlogUpdate(BlogBase):
     """Schema for updating an existing blog post."""
-
-    title: Optional[str] = Field(
-        None,
-        min_length=10,
-        max_length=255,
-        description="Title of the blog post. Must be between 10 and 255 characters.",
-    )
-    excerpt: Optional[str] = Field(
-        None,
-        min_length=20,
-        max_length=300,
-        description="Short excerpt of the blog post. Must be between 20 and 300 characters.",
-    )
-    content: Optional[str] = Field(
-        None,
-        description="Full content of the blog post.",
-    )
-    image_url: Optional[str] = Field(
-        None,
-        max_length=255,
-        description="URL of the blog post image.",
-    )
-    is_deleted: Optional[bool] = Field(
-        False,
-        description="Flag to indicate if the blog post is deleted. Defaults to False.",
-    )
 
 
 class BlogResponse(BlogBase):
@@ -121,15 +92,15 @@ class BlogListResponse(BaseModel):
         ...,
         description="Total number of blog posts.",
     )
-    next: Optional[str] = Field(
+    next: str | None = Field(
         None,
         description="URL to the next page of results, if available.",
     )
-    previous: Optional[str] = Field(
+    previous: str | None = Field(
         None,
         description="URL to the previous page of results, if available.",
     )
-    results: List[BlogListItemResponse] = Field(
+    results: list[BlogListItemResponse] = Field(
         ...,
         description="List of blog post items.",
     )

@@ -19,5 +19,5 @@ repos:
     rev: v0.5.4
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --exclude, alembic/]
       - id: ruff-format

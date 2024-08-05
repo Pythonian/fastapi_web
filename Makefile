@@ -46,7 +46,7 @@ migrate: ## Apply the database migration
 	$(ALEMBIC) upgrade head
 
 check: ## Run all checks using tox and pre-commit
-	$(PIP) install tox==4.16.0 pre-commit==3.7.1
+	$(PIP) install tox==4.16.0 pre-commit==3.8.0
 	$(TOX)
 	$(PRE_COMMIT) install
 	$(PRE_COMMIT) run --all-files
@@ -65,6 +65,7 @@ clean: ## Clean up the project
 	@rm -rf *.log
 	@rm -rf .mypy_cache
 	@rm -rf .ruff_cache
+	@rm -rf .pytest_cache
 	@rm -rf *.egg-info
 	@rm -rf dist
 	@find . -name "*.pyc" -delete

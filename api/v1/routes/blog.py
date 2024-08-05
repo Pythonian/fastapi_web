@@ -1,3 +1,5 @@
+"""API routes and handlers for blog-related operations."""
+
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -28,8 +30,7 @@ async def create_blog(
     blog: BlogCreate,
     db: Session = Depends(get_db),
 ) -> BlogResponse:
-    """
-    Create a new blog post.
+    """Create a new blog post.
 
     Args:
         blog (BlogCreate): The blog post data to create.
@@ -45,23 +46,23 @@ async def create_blog(
     try:
         return BlogService.create_blog(db, blog)
     except ValueError as e:
-        logger.warning(str(e))
+        logger.warning("Value error occurred: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from e
     except SQLAlchemyError as e:
-        logger.error(f"Database error occurred: {e}")
+        logger.exception("Database error occurred", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
-        )
+        ) from e
     except Exception as e:
-        logger.error(f"Internal server error: {e}")
+        logger.exception("Internal server error", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
-        )
+        ) from e
 
 
 @blog.get(
@@ -71,11 +72,10 @@ async def create_blog(
 )
 async def list_blog(
     page: int = Query(1, ge=1),
-    page_size: int = Query(10, ge=1, le=100),
+    page_size: int = Query(10, ge=1, le=25),
     db: Session = Depends(get_db),
 ) -> BlogListResponse:
-    """
-    Retrieve a list of blog posts with pagination.
+    """Retrieve a list of blog posts with pagination.
 
     Args:
         page (int): The page number for pagination.
@@ -91,17 +91,17 @@ async def list_blog(
     try:
         return BlogService.list_blog(db, page, page_size)
     except SQLAlchemyError as e:
-        logger.error(f"Database error occurred: {e}")
+        logger.exception("Database error occurred", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
-        )
+        ) from e
     except Exception as e:
-        logger.error(f"Internal server error: {e}")
+        logger.exception("Internal server error", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
-        )
+        ) from e
 
 
 @blog.get(
@@ -113,8 +113,7 @@ async def read_blog(
     id: int,
     db: Session = Depends(get_db),
 ) -> BlogResponse:
-    """
-    Retrieve a blog post by ID.
+    """Retrieve a blog post by ID.
 
     Args:
         id (int): The ID of the blog post to retrieve.
@@ -124,28 +123,29 @@ async def read_blog(
         BlogResponse: The blog post response.
 
     Raises:
-        HTTPException: If the blog post is not found or a database error occurs.
+        HTTPException: If the blog post is not found
+                       or a database error occurs.
     """
     try:
         return BlogService.read_blog(db, id)
     except ValueError as e:
-        logger.warning(str(e))
+        logger.warning("Value error occurred: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e
     except SQLAlchemyError as e:
-        logger.error(f"Database error occurred: {e}")
+        logger.exception("Database error occurred", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
-        )
+        ) from e
     except Exception as e:
-        logger.error(f"Internal server error: {e}")
+        logger.exception("Internal server error", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
-        )
+        ) from e
 
 
 @blog.patch(
@@ -158,8 +158,7 @@ async def update_blog(
     blog_update: BlogUpdate,
     db: Session = Depends(get_db),
 ) -> BlogResponse:
-    """
-    Update an existing blog post by ID.
+    """Update an existing blog post by ID.
 
     Args:
         id (int): The ID of the blog post to update.
@@ -176,31 +175,31 @@ async def update_blog(
     try:
         return BlogService.update_blog(db, id, blog_update)
     except RequestValidationError as e:
-        logger.warning(f"Validation error: {e}")
+        logger.warning("Validation error: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=e.errors(),
-        )
+        ) from e
     except ValueError as e:
-        logger.warning(str(e))
+        logger.warning("Value error occurred: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND
             if "not found" in str(e).lower()
             else status.HTTP_409_CONFLICT,
             detail=str(e),
-        )
+        ) from e
     except SQLAlchemyError as e:
-        logger.error(f"Database error occurred: {e}")
+        logger.exception("Database error occurred", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
-        )
+        ) from e
     except Exception as e:
-        logger.error(f"Internal server error: {e}")
+        logger.exception("Internal server error", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
-        )
+        ) from e
 
 
 @blog.delete(
@@ -211,33 +210,33 @@ async def delete_blog(
     id: int,
     db: Session = Depends(get_db),
 ) -> None:
-    """
-    Delete a blog post by ID (soft delete).
+    """Delete a blog post by ID (soft delete).
 
     Args:
         id (int): The ID of the blog post to delete.
         db (Session): The database session dependency.
 
     Raises:
-        HTTPException: If the blog post is not found or a database error occurs.
+        HTTPException: If the blog post is not found
+                       or a database error occurs.
     """
     try:
         BlogService.delete_blog(db, id)
     except ValueError as e:
-        logger.warning(str(e))
+        logger.warning("Value error occurred: %s", str(e))
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
-        )
+        ) from e
     except SQLAlchemyError as e:
-        logger.error(f"Database error occurred: {e}")
+        logger.exception("Database error occurred", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error occurred.",
-        )
+        ) from e
     except Exception as e:
-        logger.error(f"Internal server error: {e}")
+        logger.exception("Internal server error", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Internal server error.",
-        )
+        ) from e
