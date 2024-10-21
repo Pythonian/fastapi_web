@@ -70,7 +70,7 @@ async def get_root(request: Request) -> JSONResponse:
         {
             "message": "Welcome to My API",
             "URL": request.url._url,
-        }
+        },
     )
 
 
