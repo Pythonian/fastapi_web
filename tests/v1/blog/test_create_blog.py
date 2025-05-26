@@ -40,7 +40,9 @@ def test_create_blog_success(db_session_mock):
     db_session_mock.add.side_effect = lambda x: setattr(x, "id", 1)
     db_session_mock.commit.side_effect = lambda: None
     db_session_mock.refresh.side_effect = lambda blog: setattr(
-        blog, "created_at", datetime.now(timezone.utc)
+        blog,
+        "created_at",
+        datetime.now(timezone.utc),
     ) or setattr(blog, "updated_at", datetime.now(timezone.utc))
 
     # Creating the mock blog object
@@ -53,7 +55,9 @@ def test_create_blog_success(db_session_mock):
     db_session_mock.add.side_effect = lambda x: setattr(x, "id", blog_mock.id)
     db_session_mock.commit.side_effect = lambda: None
     db_session_mock.refresh.side_effect = lambda x: setattr(
-        x, "created_at", blog_mock.created_at
+        x,
+        "created_at",
+        blog_mock.created_at,
     ) or setattr(x, "updated_at", blog_mock.updated_at)
 
     response = client.post("/api/v1/blogs", json=new_blog_data)
@@ -123,7 +127,6 @@ def test_create_blog_invalid_data():
 
 def test_create_blog_boundary_testing(db_session_mock):
     """Test maximum length constraints for title and excerpt."""
-
     boundary_blog_data = {
         "title": "T" * 255,  # Maximum allowed length for title
         "excerpt": "E" * 300,  # Maximum allowed length for excerpt
@@ -136,7 +139,9 @@ def test_create_blog_boundary_testing(db_session_mock):
     db_session_mock.add.side_effect = lambda x: setattr(x, "id", 1)
     db_session_mock.commit.side_effect = lambda: None
     db_session_mock.refresh.side_effect = lambda x: setattr(
-        x, "created_at", datetime.now(timezone.utc)
+        x,
+        "created_at",
+        datetime.now(timezone.utc),
     ) or setattr(x, "updated_at", datetime.now(timezone.utc))
 
     response = client.post("/api/v1/blogs", json=boundary_blog_data)
@@ -150,7 +155,8 @@ def test_create_blog_boundary_testing(db_session_mock):
     assert "created_at" in response_data
     assert "updated_at" in response_data
     assert isinstance(
-        response_data["created_at"], str
+        response_data["created_at"],
+        str,
     )  # Check if it's a string representation of a datetime
     assert isinstance(response_data["updated_at"], str)
 

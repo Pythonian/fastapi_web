@@ -50,7 +50,9 @@ def test_update_blog_success(db_session_mock):
     ]
     db_session_mock.commit.side_effect = lambda: None
     db_session_mock.refresh.side_effect = lambda blog: setattr(
-        blog, "updated_at", datetime.now(timezone.utc)
+        blog,
+        "updated_at",
+        datetime.now(timezone.utc),
     )
 
     response = client.patch(f"/api/v1/blogs/{existing_blog.id}", json=updated_data)
@@ -158,7 +160,9 @@ def test_update_blog_invalid_data(db_session_mock):
     ]
     db_session_mock.commit.side_effect = lambda: None
     db_session_mock.refresh.side_effect = lambda blog: setattr(
-        blog, "updated_at", datetime.now(timezone.utc)
+        blog,
+        "updated_at",
+        datetime.now(timezone.utc),
     )
 
     response = client.patch(f"/api/v1/blogs/{existing_blog.id}", json=invalid_data)
@@ -190,11 +194,14 @@ def test_update_blog_boundary_testing(db_session_mock):
     ]
     db_session_mock.commit.side_effect = lambda: None
     db_session_mock.refresh.side_effect = lambda blog: setattr(
-        blog, "updated_at", datetime.now(timezone.utc)
+        blog,
+        "updated_at",
+        datetime.now(timezone.utc),
     )
 
     response = client.patch(
-        f"/api/v1/blogs/{existing_blog.id}", json=boundary_blog_data
+        f"/api/v1/blogs/{existing_blog.id}",
+        json=boundary_blog_data,
     )
 
     assert response.status_code == 200
