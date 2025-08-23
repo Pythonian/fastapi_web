@@ -19,8 +19,7 @@ class BlogService:
         db: Session,
         blog: BlogCreate,
     ) -> BlogResponse:
-        """
-        Create a new blog post.
+        """Create a new blog post.
 
         Args:
             db (Session): The database session.
@@ -34,7 +33,8 @@ class BlogService:
         """
         existing_blog = db.query(Blog).filter(Blog.title == blog.title).first()
         if existing_blog:
-            raise ValueError("A blog post with this title already exists.")
+            msg = "A blog post with this title already exists."
+            raise ValueError(msg)
 
         new_blog = Blog(
             title=blog.title,
@@ -62,8 +62,7 @@ class BlogService:
         page: int,
         page_size: int,
     ) -> BlogListResponse:
-        """
-        Retrieve a list of blog posts with pagination.
+        """Retrieve a list of blog posts with pagination.
 
         Args:
             db (Session): The database session.
@@ -114,8 +113,7 @@ class BlogService:
         db: Session,
         id: int,
     ) -> BlogResponse:
-        """
-        Retrieve a blog post by ID.
+        """Retrieve a blog post by ID.
 
         Args:
             db (Session): The database session.
@@ -136,7 +134,8 @@ class BlogService:
             .first()
         )
         if not blog:
-            raise ValueError("Blog post not found.")
+            msg = "Blog post not found."
+            raise ValueError(msg)
 
         return BlogResponse(
             id=blog.id,
@@ -154,8 +153,7 @@ class BlogService:
         id: int,
         blog_update: BlogUpdate,
     ) -> BlogResponse:
-        """
-        Update an existing blog post by ID.
+        """Update an existing blog post by ID.
 
         Args:
             db (Session): The database session.
@@ -178,7 +176,8 @@ class BlogService:
             .first()
         )
         if not blog:
-            raise ValueError("Blog post not found.")
+            msg = "Blog post not found."
+            raise ValueError(msg)
 
         update_data = blog_update.model_dump(exclude_unset=True)
 
@@ -192,7 +191,8 @@ class BlogService:
                 .first()
             )
             if existing_blog:
-                raise ValueError("A blog post with this title already exists.")
+                msg = "A blog post with this title already exists."
+                raise ValueError(msg)
 
         for field, value in update_data.items():
             setattr(blog, field, value)
@@ -215,8 +215,7 @@ class BlogService:
         db: Session,
         id: int,
     ) -> None:
-        """
-        Delete a blog post by ID (soft delete).
+        """Delete a blog post by ID (soft delete).
 
         Args:
             db (Session): The database session.
@@ -234,7 +233,8 @@ class BlogService:
             .first()
         )
         if not blog_to_delete:
-            raise ValueError("Blog post not found.")
+            msg = "Blog post not found."
+            raise ValueError(msg)
 
         blog_to_delete.is_deleted = True
         db.commit()

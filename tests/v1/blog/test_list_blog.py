@@ -12,7 +12,7 @@ from main import app
 client = TestClient(app)
 
 
-@pytest.fixture
+@pytest.fixture()
 def db_session_mock():
     """Create a mock database session."""
     return MagicMock()
@@ -46,7 +46,7 @@ def test_successful_retrieval_of_paginated_blog_posts(db_session_mock):
     )
 
     db_session_mock.query().filter().order_by().offset().limit().all.return_value = [
-        blog1
+        blog1,
     ]
     db_session_mock.query().filter().order_by().count.return_value = 2
 

@@ -12,7 +12,7 @@ from main import app
 client = TestClient(app)
 
 
-@pytest.fixture
+@pytest.fixture()
 def db_session_mock():
     """Create a mock database session."""
     return MagicMock()

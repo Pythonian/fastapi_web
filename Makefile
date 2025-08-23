@@ -46,7 +46,7 @@ migrate: ## Apply the database migration
 	$(ALEMBIC) upgrade head
 
 check: ## Run all checks using tox and pre-commit
-	$(PIP) install tox==4.16.0 pre-commit==3.8.0
+	$(PIP) install tox==4.17.0 pre-commit==3.8.0
 	$(TOX)
 	$(PRE_COMMIT) install
 	$(PRE_COMMIT) run --all-files
